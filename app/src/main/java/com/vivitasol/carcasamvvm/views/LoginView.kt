@@ -1,23 +1,20 @@
 package com.vivitasol.carcasamvvm.views
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -34,48 +31,58 @@ fun LoginView(
     val uiState by loginViewModel.uiState.collectAsState()
 
     if (uiState.loginSuccess) {
-        LaunchedEffect(Unit) {
-            onLoginSuccess()
-        }
+        LaunchedEffect(Unit) { onLoginSuccess() }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        OutlinedTextField(
-            value = uiState.email,
-            onValueChange = { loginViewModel.onEmailChange(it) },
-            label = { Text("Email") },
-            isError = uiState.emailError != null,
-            trailingIcon = {
-                if (uiState.emailError != null) {
-                    Icon(Icons.Filled.Error, "error", tint = androidx.compose.material3.MaterialTheme.colorScheme.error)
-                }
-            },
-            supportingText = { if (uiState.emailError != null) Text(uiState.emailError!!) }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = uiState.password,
-            onValueChange = { loginViewModel.onPasswordChange(it) },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            isError = uiState.passwordError != null,
-            trailingIcon = {
-                if (uiState.passwordError != null) {
-                    Icon(Icons.Filled.Error, "error", tint = androidx.compose.material3.MaterialTheme.colorScheme.error)
-                }
-            },
-            supportingText = { if (uiState.passwordError != null) Text(uiState.passwordError!!) }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { loginViewModel.login() }) {
-            Text("Login")
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            OutlinedTextField(
+                value = uiState.email,
+                onValueChange = { loginViewModel.onEmailChange(it) },
+                label = { Text("Email") },
+                enabled = !uiState.isLoading
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = uiState.password,
+                onValueChange = { loginViewModel.onPasswordChange(it) },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                enabled = !uiState.isLoading
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(onClick = { loginViewModel.login() }, enabled = !uiState.isLoading) {
+                Text("Login")
+            }
+            TextButton(onClick = onRegisterClick, enabled = !uiState.isLoading) {
+                Text("¿No tienes cuenta? Regístrate")
+            }
         }
-        TextButton(onClick = onRegisterClick) {
-            Text("Don't have an account? Register")
+
+        // --- Loading Overlay ---
+        AnimatedVisibility(visible = uiState.isLoading, enter = fadeIn(), exit = fadeOut()) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Spacer(Modifier.height(12.dp))
+                    Text("Iniciando Sesión...", color = Color.White)
+                }
+            }
+        }
+
+        // --- Error Dialog ---
+        if (uiState.errorMessage != null) {
+            AlertDialog(
+                onDismissRequest = { loginViewModel.dismissError() },
+                title = { Text("Error de Inicio de Sesión") },
+                text = { Text(uiState.errorMessage!!) },
+                confirmButton = { TextButton(onClick = { loginViewModel.dismissError() }) { Text("Aceptar") } }
+            )
         }
     }
 }
