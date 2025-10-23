@@ -8,10 +8,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.vivitasol.carcasamvvm.data.UserSessionPrefs
 import com.vivitasol.carcasamvvm.navigation.Route
+import com.vivitasol.carcasamvvm.viewmodels.ProfileViewModel
+import com.vivitasol.carcasamvvm.viewmodels.ProfileViewModelFactory
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -21,6 +24,8 @@ fun MenuShellView(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     val innerNavController = rememberNavController()
     val context = LocalContext.current
+
+    val profileViewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(context))
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -32,8 +37,8 @@ fun MenuShellView(navController: NavHostController) {
                     label = { Text("Productos") },
                     selected = currentInnerRoute(innerNavController) == Route.Option1.route,
                     onClick = {
-                        innerNavController.navigate(Route.Option1.route) {
-                            popUpTo(Route.Option1.route) { inclusive = false }
+                        innerNavController.navigate(Route.Option1.route) { 
+                            popUpTo(Route.Option1.route) { inclusive = true }
                             launchSingleTop = true
                         }
                         scope.launch { drawerState.close() }
@@ -43,7 +48,7 @@ fun MenuShellView(navController: NavHostController) {
                     label = { Text("Mi Perfil") },
                     selected = currentInnerRoute(innerNavController) == Route.Option2.route,
                     onClick = {
-                        innerNavController.navigate(Route.Option2.route) {
+                        innerNavController.navigate(Route.Option2.route) { 
                             popUpTo(Route.Option1.route) { inclusive = false }
                             launchSingleTop = true
                         }
@@ -54,7 +59,18 @@ fun MenuShellView(navController: NavHostController) {
                     label = { Text("Contáctanos") },
                     selected = currentInnerRoute(innerNavController) == Route.Option3.route,
                     onClick = {
-                        innerNavController.navigate(Route.Option3.route) {
+                        innerNavController.navigate(Route.Option3.route) { 
+                            popUpTo(Route.Option1.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                        scope.launch { drawerState.close() }
+                    }
+                )
+                NavigationDrawerItem(
+                    label = { Text("Nosotros") },
+                    selected = currentInnerRoute(innerNavController) == Route.AboutUs.route,
+                    onClick = {
+                        innerNavController.navigate(Route.AboutUs.route) { 
                             popUpTo(Route.Option1.route) { inclusive = false }
                             launchSingleTop = true
                         }
@@ -65,18 +81,7 @@ fun MenuShellView(navController: NavHostController) {
                     label = { Text("Suscripción") },
                     selected = currentInnerRoute(innerNavController) == Route.Option4.route,
                     onClick = {
-                        innerNavController.navigate(Route.Option4.route) {
-                            popUpTo(Route.Option1.route) { inclusive = false }
-                            launchSingleTop = true
-                        }
-                        scope.launch { drawerState.close() }
-                    }
-                )
-                NavigationDrawerItem(
-                    label = { Text("Foto de Mascota") },
-                    selected = currentInnerRoute(innerNavController) == Route.Option5.route,
-                    onClick = {
-                        innerNavController.navigate(Route.Option5.route) {
+                        innerNavController.navigate(Route.Option4.route) { 
                             popUpTo(Route.Option1.route) { inclusive = false }
                             launchSingleTop = true
                         }
@@ -101,7 +106,7 @@ fun MenuShellView(navController: NavHostController) {
                 )
             }
         }
-    ) {
+    ) { 
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -113,38 +118,29 @@ fun MenuShellView(navController: NavHostController) {
                     }
                 )
             }
-        ) { innerPadding ->
+        ) { innerScaffoldPadding ->
             NavHost(
                 navController = innerNavController,
                 startDestination = Route.Option1.route,
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerScaffoldPadding)
             ) {
-                composable(Route.Option1.route) { 
-                    Option1View(navController = innerNavController) 
-                }
+                composable(Route.Option1.route) { Option1View(navController = innerNavController) }
                 composable(Route.ProductDetail.route) { backStackEntry ->
                     val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
                     if (productId != null) {
-                        ProductDetailView(productId = productId) { 
-                            innerNavController.navigateUp() 
-                        }
+                        ProductDetailView(productId = productId) { innerNavController.navigateUp() }
                     }
                 }
-
-                // --- Other composables ---
-                composable(Route.Option2.route) { Option2View(navController = innerNavController) }
+                composable(Route.AboutUs.route) { AboutUsView() }
+                composable(Route.Option2.route) { Option2View(innerNavController, profileViewModel) }
                 composable(Route.Option3.route) { Option3View() }
-                
-                /*
-                // RUTA TEMPORALMENTE DESHABILITADA POR ERROR
-                composable(Route.Option2Detail.route) { backStack ->
-                    val id = backStack.arguments?.getString("id") ?: "sin-id"
-                    // Option2DetailView(id = id, onBack = { innerNavController.navigateUp() })
-                }
-                */
-
                 composable(Route.Option4.route) { Option4View() }
-                composable(Route.Option5.route) { Option5CameraView() }
+                composable(Route.Option5.route) {
+                    Option5CameraView(onPhotoTaken = {
+                        profileViewModel.updatePhoto(it)
+                        innerNavController.popBackStack()
+                    })
+                }
             }
         }
     }

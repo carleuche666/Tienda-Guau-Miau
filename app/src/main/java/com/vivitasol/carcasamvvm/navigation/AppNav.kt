@@ -20,4 +20,5 @@ sealed class Route(val route: String) {
     data object Option3 : Route("option3")
     data object Option4 : Route("option4")
     data object Option5 : Route("option5")
+    data object AboutUs : Route("about_us") // Nueva ruta
 }

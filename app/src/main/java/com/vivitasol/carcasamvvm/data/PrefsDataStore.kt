@@ -20,7 +20,8 @@ data class UserProfile(
     val fullName: String,
     val email: String,
     val phone: String,
-    val pets: List<Pet>
+    val pets: List<Pet>,
+    val photoUri: String? = null // <-- Campo añadido
 )
 
 object UserSessionPrefs {
@@ -31,6 +32,7 @@ object UserSessionPrefs {
     private val KEY_USER_FULL_NAME = stringPreferencesKey("user_full_name")
     private val KEY_USER_PHONE = stringPreferencesKey("user_phone")
     private val KEY_USER_PETS = stringPreferencesKey("user_pets_json")
+    private val KEY_USER_PHOTO_URI = stringPreferencesKey("user_photo_uri") // <-- Nueva clave
 
     // --- Session --- //
     fun getIsLoggedInFlow(context: Context): Flow<Boolean> = context.dataStore.data
@@ -41,13 +43,16 @@ object UserSessionPrefs {
 
     // --- Profile --- //
     suspend fun saveUserProfile(context: Context, profile: UserProfile, pass: String) {
-        val petsJson = JSONArray(profile.pets.map { JSONObject().put("name", it.name).put("type", it.type) })
+        val petsJson = JSONArray(profile.pets.map { pet ->
+            JSONObject().put("name", pet.name).put("type", pet.type).put("photoUri", pet.photoUri)
+        })
         context.dataStore.edit {
             it[KEY_USER_FULL_NAME] = profile.fullName
             it[KEY_USER_EMAIL] = profile.email
             it[KEY_USER_PHONE] = profile.phone
             it[KEY_USER_PASSWORD] = pass
             it[KEY_USER_PETS] = petsJson.toString()
+            profile.photoUri?.let { uri -> it[KEY_USER_PHOTO_URI] = uri }
         }
     }
 
@@ -63,10 +68,21 @@ object UserSessionPrefs {
                 val jsonArray = JSONArray(petsJson)
                 List(jsonArray.length()) { i ->
                     val petJson = jsonArray.getJSONObject(i)
-                    Pet(i, petJson.getString("name"), petJson.getString("type"))
+                    Pet(
+                        id = i,
+                        name = petJson.getString("name"),
+                        type = petJson.getString("type"),
+                        photoUri = petJson.optString("photoUri").ifEmpty { null }
+                    )
                 }
             } else emptyList()
-            UserProfile(it[KEY_USER_FULL_NAME] ?: "", it[KEY_USER_EMAIL] ?: "", it[KEY_USER_PHONE] ?: "", pets)
+            UserProfile(
+                fullName = it[KEY_USER_FULL_NAME] ?: "",
+                email = it[KEY_USER_EMAIL] ?: "",
+                phone = it[KEY_USER_PHONE] ?: "",
+                pets = pets,
+                photoUri = it[KEY_USER_PHOTO_URI]
+            )
         }
 
     // --- Subscription --- //

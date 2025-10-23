@@ -47,6 +47,16 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
 
+    // Dependencia para Google Maps en Compose
+    implementation("com.google.maps.android:maps-compose:2.11.4")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+
+    // Dependencias para CameraX
+    implementation("androidx.camera:camera-core:1.3.1")
+    implementation("androidx.camera:camera-camera2:1.3.1")
+    implementation("androidx.camera:camera-lifecycle:1.3.1")
+    implementation("androidx.camera:camera-view:1.3.1")
+
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation(platform("androidx.compose:compose-bom:2024.10.00"))
