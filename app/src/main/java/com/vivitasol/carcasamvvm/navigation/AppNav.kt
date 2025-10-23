@@ -1,7 +1,8 @@
 package com.vivitasol.carcasamvvm.navigation
 
 sealed class Route(val route: String) {
-    data object Welcome : Route("welcome")
+    data object Login : Route("login")
+    data object Register : Route("register")
     data object MenuShell : Route("menu_shell") // contenedor con drawer
     data object Option1 : Route("option1")
     data object Option2 : Route("option2")

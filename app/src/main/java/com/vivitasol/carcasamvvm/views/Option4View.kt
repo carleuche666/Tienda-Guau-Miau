@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.vivitasol.carcasamvvm.data.PrefsRepo
+import com.vivitasol.carcasamvvm.data.UserSessionPrefs
 import com.vivitasol.carcasamvvm.viewmodels.Option4ViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -37,13 +37,13 @@ fun Option4View(
 
     // Cargar preferencia al abrir
     LaunchedEffect(Unit) {
-        PrefsRepo.suscripcionFlow(context).collect { saved ->
+        UserSessionPrefs.suscripcionFlow(context).collect { saved ->
             if (ui.suscripcion != saved) vm.setSuscripcion(saved)
         }
     }
     // Guardar cada cambio
     LaunchedEffect(ui.suscripcion) {
-        PrefsRepo.setSuscripcion(context, ui.suscripcion)
+        UserSessionPrefs.setSuscripcion(context, ui.suscripcion)
     }
 
     // Estado local: loading + error
