@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.vivitasol.carcasamvvm.data.UserProfile
 import com.vivitasol.carcasamvvm.data.UserSessionPrefs
+import com.vivitasol.carcasamvvm.model.Pet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,8 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
-
-data class Pet(val id: Int, val name: String = "", val type: String = "")
 
 data class RegisterState(
     val fullName: String = "",
@@ -39,7 +39,7 @@ class RegisterViewModel(private val context: Context) : ViewModel() {
     fun onPhoneChange(phone: String) = _uiState.update { it.copy(phone = phone) }
 
     fun addPet() {
-        val newPet = Pet(id = petIdCounter.getAndIncrement())
+        val newPet = Pet(id = petIdCounter.getAndIncrement(), "", "")
         _uiState.update { it.copy(pets = it.pets + newPet) }
     }
 
@@ -54,31 +54,38 @@ class RegisterViewModel(private val context: Context) : ViewModel() {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             delay(1500) // Simular red
 
+            val state = _uiState.value
             val errors = mutableListOf<String>()
-            if (_uiState.value.fullName.isBlank() || !_uiState.value.fullName.matches("^[a-zA-Z ]+$".toRegex()) || _uiState.value.fullName.length > 50) {
+
+            if (state.fullName.isBlank() || !state.fullName.matches("^[a-zA-Z ]+$".toRegex()) || state.fullName.length > 50) {
                 errors.add("· Nombre inválido")
             }
-            if (!_uiState.value.email.endsWith("@duoc.cl")) {
+            if (!state.email.endsWith("@duoc.cl")) {
                 errors.add("· Solo se aceptan correos @duoc.cl")
             }
-            val pass = _uiState.value.password
-            if (pass.length < 8 || !pass.contains("[A-Z]".toRegex()) || !pass.contains("[a-z]".toRegex()) || !pass.contains("[0-9]".toRegex()) || !pass.contains("[@#\$%]".toRegex())) {
+            if (state.password.length < 8 || !state.password.contains("[A-Z]".toRegex()) || !state.password.contains("[a-z]".toRegex()) || !state.password.contains("[0-9]".toRegex()) || !state.password.contains("[@#\$%]".toRegex())) {
                 errors.add("· La contraseña no cumple los requisitos")
             }
-            if (pass != _uiState.value.confirmPassword) {
+            if (state.password != state.confirmPassword) {
                 errors.add("· Las contraseñas no coinciden")
             }
-            if (_uiState.value.phone.isNotEmpty() && !"^[0-9]{9,12}$".toRegex().matches(_uiState.value.phone)) {
+            if (state.phone.isNotEmpty() && !"^[0-9]{9,12}$".toRegex().matches(state.phone)) {
                 errors.add("· Teléfono inválido")
             }
-            if (_uiState.value.pets.any { it.name.isBlank() || it.type.isBlank() }) {
+            if (state.pets.any { it.name.isBlank() || it.type.isBlank() }) {
                 errors.add("· Toda mascota debe tener nombre y tipo")
             }
 
             if (errors.isNotEmpty()) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = errors.joinToString("\n")) }
             } else {
-                UserSessionPrefs.saveUserCredentials(context, _uiState.value.email, _uiState.value.password)
+                val userProfile = UserProfile(
+                    fullName = state.fullName,
+                    email = state.email,
+                    phone = state.phone,
+                    pets = state.pets
+                )
+                UserSessionPrefs.saveUserProfile(context, userProfile, state.password)
                 _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
             }
         }

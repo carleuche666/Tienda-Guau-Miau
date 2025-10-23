@@ -6,54 +6,73 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.vivitasol.carcasamvvm.model.Pet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.IOException
 
 val Context.dataStore by preferencesDataStore(name = "guau_miau_prefs")
+
+data class UserProfile(
+    val fullName: String,
+    val email: String,
+    val phone: String,
+    val pets: List<Pet>
+)
 
 object UserSessionPrefs {
     private val KEY_IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
     private val KEY_SUSCRIPCION = booleanPreferencesKey("suscripcion")
     private val KEY_USER_EMAIL = stringPreferencesKey("user_email")
     private val KEY_USER_PASSWORD = stringPreferencesKey("user_password")
+    private val KEY_USER_FULL_NAME = stringPreferencesKey("user_full_name")
+    private val KEY_USER_PHONE = stringPreferencesKey("user_phone")
+    private val KEY_USER_PETS = stringPreferencesKey("user_pets_json")
 
     // --- Session --- //
-    fun getIsLoggedInFlow(context: Context): Flow<Boolean> =
-        context.dataStore.data
-            .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
-            .map { it[KEY_IS_LOGGED_IN] ?: false }
+    fun getIsLoggedInFlow(context: Context): Flow<Boolean> = context.dataStore.data
+        .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
+        .map { it[KEY_IS_LOGGED_IN] ?: false }
 
-    suspend fun setIsLoggedIn(context: Context, value: Boolean) {
-        context.dataStore.edit { it[KEY_IS_LOGGED_IN] = value }
-    }
+    suspend fun setIsLoggedIn(context: Context, value: Boolean) = context.dataStore.edit { it[KEY_IS_LOGGED_IN] = value }
 
-    // --- Credentials --- //
-    suspend fun saveUserCredentials(context: Context, email: String, pass: String) {
+    // --- Profile --- //
+    suspend fun saveUserProfile(context: Context, profile: UserProfile, pass: String) {
+        val petsJson = JSONArray(profile.pets.map { JSONObject().put("name", it.name).put("type", it.type) })
         context.dataStore.edit {
-            it[KEY_USER_EMAIL] = email
+            it[KEY_USER_FULL_NAME] = profile.fullName
+            it[KEY_USER_EMAIL] = profile.email
+            it[KEY_USER_PHONE] = profile.phone
             it[KEY_USER_PASSWORD] = pass
+            it[KEY_USER_PETS] = petsJson.toString()
         }
     }
 
-    fun getCredentialsFlow(context: Context): Flow<Pair<String, String>> {
-        return context.dataStore.data
-            .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
-            .map {
-                val email = it[KEY_USER_EMAIL] ?: ""
-                val pass = it[KEY_USER_PASSWORD] ?: ""
-                Pair(email, pass)
-            }
-    }
+    fun getCredentialsFlow(context: Context): Flow<Pair<String, String>> = context.dataStore.data
+        .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
+        .map { Pair(it[KEY_USER_EMAIL] ?: "", it[KEY_USER_PASSWORD] ?: "") }
+
+    fun getUserProfileFlow(context: Context): Flow<UserProfile> = context.dataStore.data
+        .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
+        .map {
+            val petsJson = it[KEY_USER_PETS]
+            val pets = if (petsJson != null) {
+                val jsonArray = JSONArray(petsJson)
+                List(jsonArray.length()) { i ->
+                    val petJson = jsonArray.getJSONObject(i)
+                    Pet(i, petJson.getString("name"), petJson.getString("type"))
+                }
+            } else emptyList()
+            UserProfile(it[KEY_USER_FULL_NAME] ?: "", it[KEY_USER_EMAIL] ?: "", it[KEY_USER_PHONE] ?: "", pets)
+        }
 
     // --- Subscription --- //
-    fun suscripcionFlow(context: Context): Flow<Boolean> =
-        context.dataStore.data
-            .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
-            .map { it[KEY_SUSCRIPCION] ?: false }
+    fun suscripcionFlow(context: Context): Flow<Boolean> = context.dataStore.data
+        .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
+        .map { it[KEY_SUSCRIPCION] ?: false }
 
-    suspend fun setSuscripcion(context: Context, value: Boolean) {
-        context.dataStore.edit { it[KEY_SUSCRIPCION] = value }
-    }
+    suspend fun setSuscripcion(context: Context, value: Boolean) = context.dataStore.edit { it[KEY_SUSCRIPCION] = value }
 }

@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MenuShellView(navController: NavHostController) { // <-- Added NavController
+fun MenuShellView(navController: NavHostController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val innerNavController = rememberNavController()
@@ -26,14 +26,10 @@ fun MenuShellView(navController: NavHostController) { // <-- Added NavController
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Text(
-                    text = "Menú",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(16.dp)
-                )
-                // ... (existing menu items) ...
+                Text("Menú", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(16.dp))
+
                 NavigationDrawerItem(
-                    label = { Text("2.1.3Componentes") },
+                    label = { Text("Productos") },
                     selected = currentInnerRoute(innerNavController) == Route.Option1.route,
                     onClick = {
                         innerNavController.navigate(Route.Option1.route) {
@@ -44,7 +40,7 @@ fun MenuShellView(navController: NavHostController) { // <-- Added NavController
                     }
                 )
                 NavigationDrawerItem(
-                    label = { Text("2.2.4Navegacion") },
+                    label = { Text("Mi Perfil") },
                     selected = currentInnerRoute(innerNavController) == Route.Option2.route,
                     onClick = {
                         innerNavController.navigate(Route.Option2.route) {
@@ -55,7 +51,7 @@ fun MenuShellView(navController: NavHostController) { // <-- Added NavController
                     }
                 )
                 NavigationDrawerItem(
-                    label = { Text("2.3.3form") },
+                    label = { Text("Contáctanos") },
                     selected = currentInnerRoute(innerNavController) == Route.Option3.route,
                     onClick = {
                         innerNavController.navigate(Route.Option3.route) {
@@ -65,9 +61,8 @@ fun MenuShellView(navController: NavHostController) { // <-- Added NavController
                         scope.launch { drawerState.close() }
                     }
                 )
-
                 NavigationDrawerItem(
-                    label = { Text("2.4.2Persistencia y Animaciones") },
+                    label = { Text("Suscripción") },
                     selected = currentInnerRoute(innerNavController) == Route.Option4.route,
                     onClick = {
                         innerNavController.navigate(Route.Option4.route) {
@@ -77,9 +72,8 @@ fun MenuShellView(navController: NavHostController) { // <-- Added NavController
                         scope.launch { drawerState.close() }
                     }
                 )
-
                 NavigationDrawerItem(
-                    label = { Text("2.4.4FuncionNativa(Camara)") },
+                    label = { Text("Foto de Mascota") },
                     selected = currentInnerRoute(innerNavController) == Route.Option5.route,
                     onClick = {
                         innerNavController.navigate(Route.Option5.route) {
@@ -94,7 +88,7 @@ fun MenuShellView(navController: NavHostController) { // <-- Added NavController
 
                 NavigationDrawerItem(
                     label = { Text("Cerrar Sesión") },
-                    selected = false, // This is an action, not a destination
+                    selected = false,
                     onClick = {
                         scope.launch {
                             drawerState.close()
@@ -113,9 +107,7 @@ fun MenuShellView(navController: NavHostController) { // <-- Added NavController
                 TopAppBar(
                     title = { Text("Guau&Miau") },
                     navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch { drawerState.open() }
-                        }) {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menú")
                         }
                     }
@@ -127,13 +119,30 @@ fun MenuShellView(navController: NavHostController) { // <-- Added NavController
                 startDestination = Route.Option1.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable(Route.Option1.route) { Option1View() }
+                composable(Route.Option1.route) { 
+                    Option1View(navController = innerNavController) 
+                }
+                composable(Route.ProductDetail.route) { backStackEntry ->
+                    val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
+                    if (productId != null) {
+                        ProductDetailView(productId = productId) { 
+                            innerNavController.navigateUp() 
+                        }
+                    }
+                }
+
+                // --- Other composables ---
                 composable(Route.Option2.route) { Option2View(navController = innerNavController) }
                 composable(Route.Option3.route) { Option3View() }
+                
+                /*
+                // RUTA TEMPORALMENTE DESHABILITADA POR ERROR
                 composable(Route.Option2Detail.route) { backStack ->
                     val id = backStack.arguments?.getString("id") ?: "sin-id"
-                    Option2DetailView(id = id, onBack = { innerNavController.navigateUp() })
+                    // Option2DetailView(id = id, onBack = { innerNavController.navigateUp() })
                 }
+                */
+
                 composable(Route.Option4.route) { Option4View() }
                 composable(Route.Option5.route) { Option5CameraView() }
             }

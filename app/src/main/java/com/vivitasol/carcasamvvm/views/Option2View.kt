@@ -1,106 +1,102 @@
 package com.vivitasol.carcasamvvm.views
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Pets // <-- Import Added
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.vivitasol.carcasamvvm.navigation.Route
-import com.vivitasol.carcasamvvm.viewmodels.Option2ViewModel
-import kotlinx.coroutines.launch
+import com.vivitasol.carcasamvvm.viewmodels.ProfileViewModel
+import com.vivitasol.carcasamvvm.viewmodels.ProfileViewModelFactory
 
-/**
- * CLASE 2: Flujo y Navegación
- * - Lista con navegación a Detalle con argumento (id).
- * - Uso de NavController.navigate con launchSingleTop y popUpTo.
- * - Snackbar para feedback al tocar un ítem.
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Option2View(
-    navController: NavController,
-    vm: Option2ViewModel = viewModel()
-) {
-    val items = vm.items.collectAsState().value
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+fun Option2View(navController: NavController) {
+    val viewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(LocalContext.current))
+    val userProfile by viewModel.userProfile.collectAsState()
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
             Text(
-                "Navegación: Lista → Detalle",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                text = "Mi Perfil",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Toca un elemento para navegar con argumento. Observa cómo vuelve con Back.",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(Modifier.height(16.dp))
+        }
 
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                itemsIndexed(items) { index, item ->
-                    ElevatedCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("Abriendo detalle de $item")
-                                }
-                                navController.navigate(Route.Option2Detail.build(id = (index + 1).toString())) {
-                                    launchSingleTop = true
-                                    // Ejemplo de control de back stack:
-                                    popUpTo(Route.Option2.route) { inclusive = false }
-                                }
-                            }
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(item, style = MaterialTheme.typography.titleMedium)
-                            Spacer(Modifier.weight(1f))
-                            Text("Ver detalle", style = MaterialTheme.typography.labelLarge)
-                        }
-                    }
-                }
+        item {
+            ProfileInfoCard(userProfile.fullName, userProfile.email, userProfile.phone)
+        }
+
+        if (userProfile.pets.isNotEmpty()) {
+            item {
+                Text(
+                    text = "Mis Mascotas",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+            }
+            items(userProfile.pets) {
+                PetInfoRow(petName = it.name, petType = it.type)
             }
         }
     }
 }
 
-/**
- * Pantalla de Detalle para la navegación con argumento
- */
 @Composable
-fun Option2DetailView(
-    id: String,
-    onBack: () -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Detalle", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("ID recibido en la ruta: $id", style = MaterialTheme.typography.bodyLarge)
-        Button(onClick = onBack) { Text("Volver") }
+fun ProfileInfoCard(fullName: String, email: String, phone: String) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            ProfileInfoRow(icon = Icons.Default.Person, label = "Nombre", value = fullName)
+            Divider()
+            ProfileInfoRow(icon = Icons.Default.Email, label = "Email", value = email)
+            Divider()
+            ProfileInfoRow(icon = Icons.Default.Phone, label = "Teléfono", value = phone.ifEmpty { "No especificado" })
+        }
     }
 }
 
+@Composable
+fun ProfileInfoRow(icon: ImageVector, label: String, value: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(imageVector = icon, contentDescription = label, tint = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(text = label, style = MaterialTheme.typography.bodySmall)
+            Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+fun PetInfoRow(petName: String, petType: String) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(imageVector = Icons.Default.Pets, contentDescription = "Mascota", modifier = Modifier.size(40.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(text = petName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(text = petType, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
