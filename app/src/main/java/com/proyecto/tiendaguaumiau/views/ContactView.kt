@@ -58,7 +58,7 @@ fun ContactView(vm: ContactViewModel = viewModel()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Email, contentDescription = "Email", tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.size(16.dp))
-                            Text("contacto@guauymiau.cl", style = MaterialTheme.typography.bodyLarge)
+                            Text("guau&miau@contacto.cl", style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }

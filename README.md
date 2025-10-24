@@ -1,1 +1,13 @@
-# Tienda-Guau-Miau
+# Aplicación Movil para tienda Guau&Miau usando Kotlin junto con AndroidStudio
+Desarrollado por Carlos Acevedo y Jean Bizama
+
+# Funcionalidades 
+ - Registro
+ - Login
+ - Navegacion
+
+
+# Pasos para ejecutar
+
+1. Descargar .zip o clonar el repositorio
+2. Entrar a MainActivity.kt y hacer click en Ejecutar Aplicacion
