@@ -23,7 +23,7 @@ import com.vivitasol.carcasamvvm.model.sampleProducts
 import com.vivitasol.carcasamvvm.navigation.Route
 
 @Composable
-fun Option1View(navController: NavController) {
+fun ProductsView(navController: NavController) { // <-- Renamed
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -86,7 +86,7 @@ fun ProductCard(product: Product, onClick: () -> Unit) {
 
 @Preview(showBackground = true)
 @Composable
-private fun Option1ViewPreview() {
+private fun ProductsViewPreview() { // <-- Renamed
     MaterialTheme {
         // This preview won't work correctly without a NavController.
         // A more complex preview setup is needed for interactive components.

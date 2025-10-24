@@ -4,14 +4,32 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +43,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.vivitasol.carcasamvvm.R
+import com.vivitasol.carcasamvvm.model.Pet
 import com.vivitasol.carcasamvvm.navigation.Route
 import com.vivitasol.carcasamvvm.viewmodels.ProfileViewModel
 import com.vivitasol.carcasamvvm.viewmodels.ProfileViewModelFactory
@@ -33,10 +52,9 @@ import com.vivitasol.carcasamvvm.viewmodels.petPhotoTarget
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Option2View(navController: NavController, viewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(LocalContext.current))) {
+fun ProfileView(navController: NavController, viewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(LocalContext.current))) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Correctly handle navigation as a side-effect
     LaunchedEffect(uiState.photoTarget) {
         if (uiState.photoTarget != null) {
             navController.navigate(Route.Option5.route)
@@ -49,11 +67,8 @@ fun Option2View(navController: NavController, viewModel: ProfileViewModel = view
                 FloatingActionButton(onClick = {
                     if (uiState.isEditing) viewModel.saveChanges() else viewModel.toggleEditMode()
                 }) {
-                    if (uiState.isEditing) {
-                        Icon(Icons.Default.Save, contentDescription = "Guardar")
-                    } else {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar")
-                    }
+                    if (uiState.isEditing) Icon(Icons.Default.Save, contentDescription = "Guardar")
+                    else Icon(Icons.Default.Edit, contentDescription = "Editar")
                 }
             }
         }
@@ -65,10 +80,12 @@ fun Option2View(navController: NavController, viewModel: ProfileViewModel = view
         } else {
             uiState.userProfile?.let { profile ->
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
+                    modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    item { Spacer(Modifier.height(1.dp)) }
+
                     item {
                         val painter = rememberAsyncImagePainter(model = profile.photoUri, placeholder = painterResource(id = R.drawable.ic_launcher_foreground))
                         Image(
@@ -85,7 +102,6 @@ fun Option2View(navController: NavController, viewModel: ProfileViewModel = view
                         Spacer(modifier = Modifier.height(16.dp))
                     }
 
-                    // --- User Info Section ---
                     if (uiState.isEditing) {
                         item {
                             OutlinedTextField(value = profile.fullName, onValueChange = viewModel::onFullNameChange, label = { Text("Nombre Completo") }, modifier = Modifier.fillMaxWidth())
@@ -100,21 +116,20 @@ fun Option2View(navController: NavController, viewModel: ProfileViewModel = view
                         }
                     }
 
-                    // --- Pets Section ---
                     item {
                         Text("Mis Mascotas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 16.dp))
                     }
 
                     items(profile.pets) { pet ->
                         PetInfoRow(
-                            petName = pet.name,
-                            petType = pet.type,
-                            photoUri = pet.photoUri,
+                            pet = pet,
                             isEditing = uiState.isEditing,
                             onNameChange = { newName -> viewModel.onPetNameChange(pet.id, newName) },
                             onPhotoClick = { viewModel.setPhotoTarget(petPhotoTarget(pet.id)) }
                         )
+                        Spacer(Modifier.height(8.dp))
                     }
+                     item { Spacer(Modifier.height(64.dp)) } // Spacer for FAB
                 }
             }
         }
@@ -123,7 +138,7 @@ fun Option2View(navController: NavController, viewModel: ProfileViewModel = view
 
 @Composable
 private fun ProfileInfoCard(fullName: String, email: String, phone: String) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(4.dp)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             ProfileInfoRow(icon = Icons.Default.Person, label = "Nombre", value = fullName)
             Divider()
@@ -137,30 +152,29 @@ private fun ProfileInfoCard(fullName: String, email: String, phone: String) {
 @Composable
 private fun ProfileInfoRow(icon: ImageVector, label: String, value: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(imageVector = icon, contentDescription = label, tint = MaterialTheme.colorScheme.primary)
+        Icon(imageVector = icon, contentDescription = label, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(text = label, style = MaterialTheme.typography.bodySmall)
+            Text(text = label.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PetInfoRow(
-    petName: String,
-    petType: String,
-    photoUri: String?,
+    pet: Pet,
     isEditing: Boolean,
     onNameChange: (String) -> Unit,
     onPhotoClick: () -> Unit
 ) {
-    val painter = rememberAsyncImagePainter(model = photoUri, placeholder = painterResource(id = R.drawable.ic_launcher_foreground))
+    val painter = rememberAsyncImagePainter(model = pet.photoUri, placeholder = painterResource(id = R.drawable.ic_launcher_foreground))
     if (isEditing) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Image(
                 painter = painter,
-                contentDescription = "Foto de $petName",
+                contentDescription = "Foto de ${pet.name}",
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
@@ -168,16 +182,16 @@ fun PetInfoRow(
                     .clickable(onClick = onPhotoClick),
                 contentScale = ContentScale.Crop
             )
-            OutlinedTextField(value = petName, onValueChange = onNameChange, label = { Text("Nombre Mascota") }, modifier = Modifier.weight(1f))
+            OutlinedTextField(value = pet.name, onValueChange = onNameChange, label = { Text("Nombre Mascota") }, modifier = Modifier.weight(1f))
         }
     } else {
-        Card(modifier = Modifier.fillMaxWidth()) {
+        Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(4.dp)) {
             Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Image(painter = painter, contentDescription = "Foto de $petName", modifier = Modifier.size(60.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer), contentScale = ContentScale.Crop)
+                Image(painter = painter, contentDescription = "Foto de ${pet.name}", modifier = Modifier.size(60.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer), contentScale = ContentScale.Crop)
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text(text = petName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(text = petType, style = MaterialTheme.typography.bodyMedium)
+                    Text(text = pet.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(text = pet.type, style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }

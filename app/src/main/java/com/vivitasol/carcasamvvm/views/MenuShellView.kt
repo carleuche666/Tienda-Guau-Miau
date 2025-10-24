@@ -124,7 +124,7 @@ fun MenuShellView(navController: NavHostController) {
                 startDestination = Route.Option1.route,
                 modifier = Modifier.padding(innerScaffoldPadding)
             ) {
-                composable(Route.Option1.route) { Option1View(navController = innerNavController) }
+                composable(Route.Option1.route) { ProductsView(navController = innerNavController) }
                 composable(Route.ProductDetail.route) { backStackEntry ->
                     val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
                     if (productId != null) {
@@ -132,11 +132,12 @@ fun MenuShellView(navController: NavHostController) {
                     }
                 }
                 composable(Route.AboutUs.route) { AboutUsView() }
-                composable(Route.Option2.route) { Option2View(innerNavController, profileViewModel) }
-                composable(Route.Option3.route) { Option3View() }
-                composable(Route.Option4.route) { Option4View() }
+                composable(Route.Option2.route) { ProfileView(innerNavController, profileViewModel) }
+                composable(Route.Option3.route) { ContactView() }
+                composable(Route.Option4.route) { SubscriptionView() }
+                // La ruta a la cámara se mantiene para la funcionalidad del perfil
                 composable(Route.Option5.route) {
-                    Option5CameraView(onPhotoTaken = {
+                    CameraView(onPhotoTaken = {
                         profileViewModel.updatePhoto(it)
                         innerNavController.popBackStack()
                     })

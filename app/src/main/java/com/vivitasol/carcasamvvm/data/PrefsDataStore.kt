@@ -21,7 +21,7 @@ data class UserProfile(
     val email: String,
     val phone: String,
     val pets: List<Pet>,
-    val photoUri: String? = null // <-- Campo añadido
+    val photoUri: String? = null
 )
 
 object UserSessionPrefs {
@@ -32,7 +32,7 @@ object UserSessionPrefs {
     private val KEY_USER_FULL_NAME = stringPreferencesKey("user_full_name")
     private val KEY_USER_PHONE = stringPreferencesKey("user_phone")
     private val KEY_USER_PETS = stringPreferencesKey("user_pets_json")
-    private val KEY_USER_PHOTO_URI = stringPreferencesKey("user_photo_uri") // <-- Nueva clave
+    private val KEY_USER_PHOTO_URI = stringPreferencesKey("user_photo_uri")
 
     // --- Session --- //
     fun getIsLoggedInFlow(context: Context): Flow<Boolean> = context.dataStore.data
@@ -44,7 +44,11 @@ object UserSessionPrefs {
     // --- Profile --- //
     suspend fun saveUserProfile(context: Context, profile: UserProfile, pass: String) {
         val petsJson = JSONArray(profile.pets.map { pet ->
-            JSONObject().put("name", pet.name).put("type", pet.type).put("photoUri", pet.photoUri)
+            JSONObject()
+                .put("id", pet.id)
+                .put("name", pet.name)
+                .put("type", pet.type)
+                .putOpt("photoUri", pet.photoUri)
         })
         context.dataStore.edit {
             it[KEY_USER_FULL_NAME] = profile.fullName
@@ -52,7 +56,11 @@ object UserSessionPrefs {
             it[KEY_USER_PHONE] = profile.phone
             it[KEY_USER_PASSWORD] = pass
             it[KEY_USER_PETS] = petsJson.toString()
-            profile.photoUri?.let { uri -> it[KEY_USER_PHOTO_URI] = uri }
+            if (profile.photoUri != null) {
+                it[KEY_USER_PHOTO_URI] = profile.photoUri
+            } else {
+                it.remove(KEY_USER_PHOTO_URI)
+            }
         }
     }
 
@@ -65,23 +73,30 @@ object UserSessionPrefs {
         .map {
             val petsJson = it[KEY_USER_PETS]
             val pets = if (petsJson != null) {
-                val jsonArray = JSONArray(petsJson)
-                List(jsonArray.length()) { i ->
-                    val petJson = jsonArray.getJSONObject(i)
-                    Pet(
-                        id = i,
-                        name = petJson.getString("name"),
-                        type = petJson.getString("type"),
-                        photoUri = petJson.optString("photoUri").ifEmpty { null }
-                    )
+                try {
+                    val jsonArray = JSONArray(petsJson)
+                    List(jsonArray.length()) { i ->
+                        val petJson = jsonArray.getJSONObject(i)
+                        val uriString = petJson.optString("photoUri")
+                        Pet(
+                            id = petJson.optInt("id", i), // <-- FIX: Safely read the ID
+                            name = petJson.getString("name"),
+                            type = petJson.getString("type"),
+                            photoUri = if (uriString.isNullOrBlank() || uriString == "null") null else uriString
+                        )
+                    }
+                } catch (e: Exception) {
+                    emptyList() // Si falla el parseo, devuelve lista vacía
                 }
             } else emptyList()
+            
+            val userPhotoUriString = it[KEY_USER_PHOTO_URI]
             UserProfile(
                 fullName = it[KEY_USER_FULL_NAME] ?: "",
                 email = it[KEY_USER_EMAIL] ?: "",
                 phone = it[KEY_USER_PHONE] ?: "",
                 pets = pets,
-                photoUri = it[KEY_USER_PHOTO_URI]
+                photoUri = if (userPhotoUriString.isNullOrBlank() || userPhotoUriString == "null") null else userPhotoUriString
             )
         }
 
