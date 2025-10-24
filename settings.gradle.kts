@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CarcasaMVVM"
+rootProject.name = "TiendaGuau&Miau"
 include(":app")
  

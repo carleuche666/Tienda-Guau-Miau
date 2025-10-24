@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.vivitasol.carcasamvvm"
+    namespace = "com.vivitasol.tiendaguaumiau" // <-- CORREGIDO
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.vivitasol.carcasamvvm"
+        applicationId = "com.vivitasol.tiendaguaumiau"
         minSdk = 33
         targetSdk = 36
         versionCode = 1
