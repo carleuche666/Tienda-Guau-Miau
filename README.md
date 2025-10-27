@@ -5,6 +5,9 @@ Desarrollado por Carlos Acevedo y Jean Bizama
  - Registro
  - Login
  - Navegacion
+ - Perfil
+ - Catalogo de productos
+ - Funcionalidad nativa (Uso de cámara)
 
 
 # Pasos para ejecutar
