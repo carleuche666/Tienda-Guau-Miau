@@ -4,5 +4,5 @@ data class Pet(
     val id: Int,
     val name: String = "",
     val type: String = "",
-    val photoUri: String? = null // <-- Campo añadido
+    val photoUri: String? = null
 )

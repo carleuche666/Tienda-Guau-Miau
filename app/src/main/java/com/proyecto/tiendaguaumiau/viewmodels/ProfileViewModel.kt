@@ -53,7 +53,7 @@ class ProfileViewModel(private val context: Context) : ViewModel() {
             }
             state.copy(userProfile = newProfile)
         }
-        setPhotoTarget(null) // Reset target
+        setPhotoTarget(null)
     }
 
     fun toggleEditMode() = _uiState.update { it.copy(isEditing = !it.isEditing) }

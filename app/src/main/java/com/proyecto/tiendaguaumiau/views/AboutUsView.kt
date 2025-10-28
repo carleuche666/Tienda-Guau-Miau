@@ -21,10 +21,9 @@ import com.google.maps.android.compose.rememberCameraPositionState
 
 @Composable
 fun AboutUsView() {
-    // 1. Ubicación de la tienda (Ahora: Estadio Monumental)
     val storeLocation = LatLng(-33.5069, -70.6053)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(storeLocation, 17f) // Aumenté el zoom
+        position = CameraPosition.fromLatLngZoom(storeLocation, 17f)
     }
 
     Column(
@@ -47,14 +46,12 @@ fun AboutUsView() {
             style = MaterialTheme.typography.titleMedium
         )
 
-        // 2. Componente de GoogleMap
         GoogleMap(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp),
             cameraPositionState = cameraPositionState
         ) {
-            // 3. Marcador en la nueva ubicación
             Marker(
                 state = MarkerState(position = storeLocation),
                 title = "Guau&Miau (Cerca del Estadio Monumental)",

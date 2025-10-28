@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vivitasol.tiendaguaumiau.viewmodels.RegisterViewModel
 import com.vivitasol.tiendaguaumiau.viewmodels.RegisterViewModelFactory
+import com.vivitasol.tiendaguaumiau.views.composables.CommonAlertDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +34,22 @@ fun RegisterView(
     val petTypes = listOf("Gato", "Perro", "Ave", "Otro")
 
     if (uiState.registrationSuccess) {
-        LaunchedEffect(Unit) { onRegisterSuccess() }
+        CommonAlertDialog(
+            title = "¡Registro Exitoso!",
+            text = "Tu cuenta ha sido creada. Ahora puedes iniciar sesión.",
+            onDismiss = {
+                registerViewModel.reset()
+                onRegisterSuccess()
+            }
+        )
+    }
+
+    if (uiState.errorMessage != null) {
+        CommonAlertDialog(
+            title = "Error de Registro",
+            text = uiState.errorMessage!!,
+            onDismiss = { registerViewModel.dismissError() }
+        )
     }
 
     LazyColumn(
@@ -48,26 +64,65 @@ fun RegisterView(
 
         item { OutlinedTextField(value = uiState.fullName, onValueChange = registerViewModel::onFullNameChange, label = { Text("Nombre Completo") }, modifier = Modifier.fillMaxWidth()) }
         item { OutlinedTextField(value = uiState.email, onValueChange = registerViewModel::onEmailChange, label = { Text("Email") }, modifier = Modifier.fillMaxWidth()) }
-        item { OutlinedTextField(value = uiState.password, onValueChange = registerViewModel::onPasswordChange, label = { Text("Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth()) }
+        item { 
+            OutlinedTextField(value = uiState.password, onValueChange = registerViewModel::onPasswordChange, label = { Text("Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+            Text(
+                text = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un caracter especial (@, #, $, %)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         item { OutlinedTextField(value = uiState.confirmPassword, onValueChange = registerViewModel::onConfirmPasswordChange, label = { Text("Confirmar Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth()) }
         item { OutlinedTextField(value = uiState.phone, onValueChange = registerViewModel::onPhoneChange, label = { Text("Teléfono (opcional)") }, modifier = Modifier.fillMaxWidth()) }
 
         item { Text("Mascotas", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp)) }
         items(uiState.pets) { pet ->
             var isDropdownExpanded by remember { mutableStateOf(false) }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = pet.name, onValueChange = { registerViewModel.onPetNameChange(pet.id, it) }, label = { Text("Nombre Mascota") }, modifier = Modifier.weight(1f))
-                ExposedDropdownMenuBox(expanded = isDropdownExpanded, onExpandedChange = { isDropdownExpanded = it }, modifier = Modifier.weight(1f)) {
-                    OutlinedTextField(value = pet.type, onValueChange = {}, readOnly = true, label = { Text("Tipo") }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) }, modifier = Modifier.menuAnchor())
-                    ExposedDropdownMenu(expanded = isDropdownExpanded, onDismissRequest = { isDropdownExpanded = false }) {
-                        petTypes.forEach { type -> DropdownMenuItem(text = { Text(type) }, onClick = { registerViewModel.onPetTypeChange(pet.id, type); isDropdownExpanded = false }) }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = pet.name,
+                    onValueChange = { registerViewModel.onPetNameChange(pet.id, it) },
+                    label = { Text("Nombre Mascota", maxLines = 1) },
+                    modifier = Modifier.weight(1f)
+                )
+                ExposedDropdownMenuBox(
+                    expanded = isDropdownExpanded,
+                    onExpandedChange = { isDropdownExpanded = it },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    OutlinedTextField(
+                        value = pet.type,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Tipo") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = isDropdownExpanded,
+                        onDismissRequest = { isDropdownExpanded = false }
+                    ) {
+                        petTypes.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type) },
+                                onClick = {
+                                    registerViewModel.onPetTypeChange(pet.id, type)
+                                    isDropdownExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
-                IconButton(onClick = { registerViewModel.removePet(pet.id) }) { Icon(Icons.Default.Delete, contentDescription = "Eliminar") }
+                IconButton(onClick = { registerViewModel.removePet(pet.id) }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Eliminar")
+                }
             }
         }
 
-        item { uiState.errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) } }
         item { Button(onClick = { registerViewModel.addPet() }) { Text("Añadir Mascota") } }
 
         item { Spacer(modifier = Modifier.height(16.dp)) }

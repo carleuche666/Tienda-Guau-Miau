@@ -49,10 +49,14 @@ class RegisterViewModel(private val context: Context) : ViewModel() {
 
     fun dismissError() = _uiState.update { it.copy(errorMessage = null) }
 
+    fun reset() {
+        _uiState.value = RegisterState()
+    }
+
     fun register() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            delay(1500) // Simular red
+            delay(1500)
 
             val state = _uiState.value
             val errors = mutableListOf<String>()
@@ -60,12 +64,15 @@ class RegisterViewModel(private val context: Context) : ViewModel() {
             if (state.fullName.isBlank() || !state.fullName.matches("^[a-zA-Z ]+$".toRegex()) || state.fullName.length > 50) {
                 errors.add("· Nombre inválido")
             }
-            if (!state.email.endsWith("@duoc.cl")) {
-                errors.add("· Solo se aceptan correos @duoc.cl")
+            if (!state.email.endsWith("@duocuc.cl")) {
+                errors.add("· Solo se aceptan correos @duocuc.cl")
             }
-            if (state.password.length < 8 || !state.password.contains("[A-Z]".toRegex()) || !state.password.contains("[a-z]".toRegex()) || !state.password.contains("[0-9]".toRegex()) || !state.password.contains("[@#\$%]".toRegex())) {
-                errors.add("· La contraseña no cumple los requisitos")
-            }
+            if (state.password.length < 8) errors.add("· La contraseña debe tener al menos 8 caracteres")
+            if (!state.password.contains("[A-Z]".toRegex())) errors.add("· La contraseña debe contener una mayúscula")
+            if (!state.password.contains("[a-z]".toRegex())) errors.add("· La contraseña debe contener una minúscula")
+            if (!state.password.contains("[0-9]".toRegex())) errors.add("· La contraseña debe contener un número")
+            if (!state.password.contains("[@#\$%]".toRegex())) errors.add("· La contraseña debe contener un caracter especial (@, #, $, %)")
+
             if (state.password != state.confirmPassword) {
                 errors.add("· Las contraseñas no coinciden")
             }

@@ -31,7 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vivitasol.tiendaguaumiau.viewmodels.CameraViewModel
 
 @Composable
-fun CameraView(onPhotoTaken: (String) -> Unit) { // <-- Renamed
+fun CameraView(onPhotoTaken: (String) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraController = remember { LifecycleCameraController(context) }

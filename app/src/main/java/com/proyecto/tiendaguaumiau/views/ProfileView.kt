@@ -127,7 +127,7 @@ fun ProfileView(navController: NavController, viewModel: ProfileViewModel = view
                         )
                         Spacer(Modifier.height(8.dp))
                     }
-                     item { Spacer(Modifier.height(64.dp)) } // Spacer for FAB
+                     item { Spacer(Modifier.height(64.dp)) }
                 }
             }
         }

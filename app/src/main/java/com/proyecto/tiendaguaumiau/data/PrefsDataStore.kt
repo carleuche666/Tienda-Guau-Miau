@@ -34,14 +34,12 @@ object UserSessionPrefs {
     private val KEY_USER_PETS = stringPreferencesKey("user_pets_json")
     private val KEY_USER_PHOTO_URI = stringPreferencesKey("user_photo_uri")
 
-    // --- Session --- //
     fun getIsLoggedInFlow(context: Context): Flow<Boolean> = context.dataStore.data
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
         .map { it[KEY_IS_LOGGED_IN] ?: false }
 
     suspend fun setIsLoggedIn(context: Context, value: Boolean) = context.dataStore.edit { it[KEY_IS_LOGGED_IN] = value }
 
-    // --- Profile --- //
     suspend fun saveUserProfile(context: Context, profile: UserProfile, pass: String) {
         val petsJson = JSONArray(profile.pets.map { pet ->
             JSONObject()
@@ -79,14 +77,14 @@ object UserSessionPrefs {
                         val petJson = jsonArray.getJSONObject(i)
                         val uriString = petJson.optString("photoUri")
                         Pet(
-                            id = petJson.optInt("id", i), // <-- FIX: Safely read the ID
+                            id = petJson.optInt("id", i),
                             name = petJson.getString("name"),
                             type = petJson.getString("type"),
                             photoUri = if (uriString.isNullOrBlank() || uriString == "null") null else uriString
                         )
                     }
                 } catch (e: Exception) {
-                    emptyList() // Si falla el parseo, devuelve lista vacía
+                    emptyList()
                 }
             } else emptyList()
             
@@ -100,7 +98,6 @@ object UserSessionPrefs {
             )
         }
 
-    // --- Subscription --- //
     fun suscripcionFlow(context: Context): Flow<Boolean> = context.dataStore.data
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
         .map { it[KEY_SUSCRIPCION] ?: false }

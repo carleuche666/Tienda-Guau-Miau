@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vivitasol.tiendaguaumiau" // <-- CORREGIDO
+    namespace = "com.vivitasol.tiendaguaumiau"
     compileSdk = 36
 
     defaultConfig {
@@ -40,18 +40,12 @@ android {
 }
 
 dependencies {
-    //dependencias para room(vista 6)
-
-
-    //dependencias lifecycle
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
 
-    // Dependencia para Google Maps en Compose
     implementation("com.google.maps.android:maps-compose:2.11.4")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
 
-    // Dependencias para CameraX
     implementation("androidx.camera:camera-core:1.3.1")
     implementation("androidx.camera:camera-camera2:1.3.1")
     implementation("androidx.camera:camera-lifecycle:1.3.1")

@@ -6,9 +6,10 @@ import kotlinx.coroutines.flow.StateFlow
 
 data class ContactState(
     val name: String = "",
-    val email: String = "", // Mantenemos el email para saber quién contacta
+    val email: String = "",
     val subject: String = "",
-    val message: String = ""
+    val message: String = "",
+    val showSuccessDialog: Boolean = false
 )
 
 data class ContactErrors(
@@ -32,7 +33,17 @@ class ContactViewModel : ViewModel() {
     fun onSubjectChange(v: String) { _state.value = _state.value.copy(subject = v) }
     fun onMessageChange(v: String) { _state.value = _state.value.copy(message = v) }
 
-    fun validate(): Boolean {
+    fun dismissDialog() {
+        _state.value = _state.value.copy(showSuccessDialog = false)
+    }
+
+    fun submit() {
+        if (validate()) {
+            _state.value = _state.value.copy(showSuccessDialog = true)
+        }
+    }
+
+    private fun validate(): Boolean {
         val s = _state.value
         
         val nameErr = if (s.name.isBlank()) "Nombre es obligatorio" else null
@@ -49,7 +60,7 @@ class ContactViewModel : ViewModel() {
         return listOf(nameErr, emailErr, subjectErr, messageErr).all { it == null }
     }
 
-    fun reset() {
+    fun resetForm() {
         _state.value = ContactState()
         _errors.value = ContactErrors()
     }

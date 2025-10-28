@@ -47,7 +47,7 @@ class LoginViewModel(private val context: Context): ViewModel() {
     fun login() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            delay(1500) // Simular red
+            delay(1500)
 
             val email = _uiState.value.email
             val password = _uiState.value.password

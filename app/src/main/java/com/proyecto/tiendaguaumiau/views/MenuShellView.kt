@@ -1,5 +1,7 @@
 package com.vivitasol.tiendaguaumiau.views
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -15,6 +17,8 @@ import com.vivitasol.tiendaguaumiau.data.UserSessionPrefs
 import com.vivitasol.tiendaguaumiau.navigation.Route
 import com.vivitasol.tiendaguaumiau.viewmodels.ProfileViewModel
 import com.vivitasol.tiendaguaumiau.viewmodels.ProfileViewModelFactory
+import com.vivitasol.tiendaguaumiau.views.composables.LoadingOverlay
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,6 +28,7 @@ fun MenuShellView(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     val innerNavController = rememberNavController()
     val context = LocalContext.current
+    var isLoggingOut by remember { mutableStateOf(false) }
 
     val profileViewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(context))
 
@@ -32,6 +37,8 @@ fun MenuShellView(navController: NavHostController) {
         drawerContent = {
             ModalDrawerSheet {
                 Text("Menú", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(16.dp))
+
+                // ... (items de navegación)
 
                 NavigationDrawerItem(
                     label = { Text("Productos") },
@@ -96,11 +103,14 @@ fun MenuShellView(navController: NavHostController) {
                     selected = false,
                     onClick = {
                         scope.launch {
+                            isLoggingOut = true
                             drawerState.close()
+                            delay(1500)
                             UserSessionPrefs.setIsLoggedIn(context, false)
                             navController.navigate(Route.Login.route) {
                                 popUpTo(Route.MenuShell.route) { inclusive = true }
                             }
+                            isLoggingOut = false
                         }
                     }
                 )
@@ -119,28 +129,33 @@ fun MenuShellView(navController: NavHostController) {
                 )
             }
         ) { innerScaffoldPadding ->
-            NavHost(
-                navController = innerNavController,
-                startDestination = Route.Option1.route,
-                modifier = Modifier.padding(innerScaffoldPadding)
-            ) {
-                composable(Route.Option1.route) { ProductsView(navController = innerNavController) }
-                composable(Route.ProductDetail.route) { backStackEntry ->
-                    val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
-                    if (productId != null) {
-                        ProductDetailView(productId = productId) { innerNavController.navigateUp() }
+            Box(modifier = Modifier.fillMaxSize()) {
+                NavHost(
+                    navController = innerNavController,
+                    startDestination = Route.Option1.route,
+                    modifier = Modifier.padding(innerScaffoldPadding)
+                ) {
+                    composable(Route.Option1.route) { ProductsView(navController = innerNavController) }
+                    composable(Route.ProductDetail.route) { backStackEntry ->
+                        val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
+                        if (productId != null) {
+                            ProductDetailView(productId = productId) { innerNavController.navigateUp() }
+                        }
+                    }
+                    composable(Route.AboutUs.route) { AboutUsView() }
+                    composable(Route.Option2.route) { ProfileView(innerNavController, profileViewModel) }
+                    composable(Route.Option3.route) { ContactView() }
+                    composable(Route.Option4.route) { SubscriptionView() }
+                    composable(Route.Option5.route) {
+                        CameraView(onPhotoTaken = {
+                            profileViewModel.updatePhoto(it)
+                            innerNavController.popBackStack()
+                        })
                     }
                 }
-                composable(Route.AboutUs.route) { AboutUsView() }
-                composable(Route.Option2.route) { ProfileView(innerNavController, profileViewModel) }
-                composable(Route.Option3.route) { ContactView() }
-                composable(Route.Option4.route) { SubscriptionView() }
-                // La ruta a la cámara se mantiene para la funcionalidad del perfil
-                composable(Route.Option5.route) {
-                    CameraView(onPhotoTaken = {
-                        profileViewModel.updatePhoto(it)
-                        innerNavController.popBackStack()
-                    })
+
+                if (isLoggingOut) {
+                    LoadingOverlay(isLoading = true, text = "Cerrando Sesión...")
                 }
             }
         }
