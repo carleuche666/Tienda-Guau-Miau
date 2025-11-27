@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -31,70 +32,51 @@ fun MenuShellView(navController: NavHostController) {
     var isLoggingOut by remember { mutableStateOf(false) }
 
     val profileViewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(context))
+    // Obtenemos el estado del ViewModel del perfil
+    val profileUiState by profileViewModel.uiState.collectAsState()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
                 Text("Menú", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(16.dp))
-
-                // ... (items de navegación)
+                Divider()
 
                 NavigationDrawerItem(
                     label = { Text("Productos") },
                     selected = currentInnerRoute(innerNavController) == Route.Option1.route,
-                    onClick = {
-                        innerNavController.navigate(Route.Option1.route) { 
-                            popUpTo(Route.Option1.route) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                        scope.launch { drawerState.close() }
-                    }
+                    onClick = { innerNavController.navigate(Route.Option1.route) { launchSingleTop = true }; scope.launch { drawerState.close() } }
                 )
                 NavigationDrawerItem(
                     label = { Text("Mi Perfil") },
                     selected = currentInnerRoute(innerNavController) == Route.Option2.route,
+                    onClick = { innerNavController.navigate(Route.Option2.route) { launchSingleTop = true }; scope.launch { drawerState.close() } }
+                )
+                NavigationDrawerItem(
+                    label = { Text("Mis Mascotas") },
+                    selected = currentInnerRoute(innerNavController) == "pet_api_test",
                     onClick = {
-                        innerNavController.navigate(Route.Option2.route) { 
-                            popUpTo(Route.Option1.route) { inclusive = false }
-                            launchSingleTop = true
-                        }
+                        innerNavController.navigate("pet_api_test") { launchSingleTop = true }
                         scope.launch { drawerState.close() }
                     }
                 )
                 NavigationDrawerItem(
                     label = { Text("Contáctanos") },
                     selected = currentInnerRoute(innerNavController) == Route.Option3.route,
-                    onClick = {
-                        innerNavController.navigate(Route.Option3.route) { 
-                            popUpTo(Route.Option1.route) { inclusive = false }
-                            launchSingleTop = true
-                        }
-                        scope.launch { drawerState.close() }
-                    }
+                    onClick = { innerNavController.navigate(Route.Option3.route) { launchSingleTop = true }; scope.launch { drawerState.close() } }
                 )
                 NavigationDrawerItem(
                     label = { Text("Nosotros") },
                     selected = currentInnerRoute(innerNavController) == Route.AboutUs.route,
-                    onClick = {
-                        innerNavController.navigate(Route.AboutUs.route) { 
-                            popUpTo(Route.Option1.route) { inclusive = false }
-                            launchSingleTop = true
-                        }
-                        scope.launch { drawerState.close() }
-                    }
+                    onClick = { innerNavController.navigate(Route.AboutUs.route) { launchSingleTop = true }; scope.launch { drawerState.close() } }
                 )
                 NavigationDrawerItem(
                     label = { Text("Suscripción") },
                     selected = currentInnerRoute(innerNavController) == Route.Option4.route,
-                    onClick = {
-                        innerNavController.navigate(Route.Option4.route) { 
-                            popUpTo(Route.Option1.route) { inclusive = false }
-                            launchSingleTop = true
-                        }
-                        scope.launch { drawerState.close() }
-                    }
+                    onClick = { innerNavController.navigate(Route.Option4.route) { launchSingleTop = true }; scope.launch { drawerState.close() } }
                 )
+
+
 
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -143,7 +125,7 @@ fun MenuShellView(navController: NavHostController) {
                         }
                     }
                     composable(Route.AboutUs.route) { AboutUsView() }
-                    composable(Route.Option2.route) { ProfileView(innerNavController, profileViewModel) }
+                    composable(Route.Option2.route) { ProfileView(navController = innerNavController, viewModel = profileViewModel) }
                     composable(Route.Option3.route) { ContactView() }
                     composable(Route.Option4.route) { SubscriptionView() }
                     composable(Route.Option5.route) {
@@ -151,6 +133,12 @@ fun MenuShellView(navController: NavHostController) {
                             profileViewModel.updatePhoto(it)
                             innerNavController.popBackStack()
                         })
+                    }
+
+                    composable("pet_api_test") {
+                        // Usamos el email del perfil del usuario actual
+                        val userEmail = profileUiState.userProfile?.email ?: ""
+                        PetApiTestView(userEmail = userEmail)
                     }
                 }
 

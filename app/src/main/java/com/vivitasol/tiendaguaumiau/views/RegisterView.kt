@@ -75,55 +75,6 @@ fun RegisterView(
         item { OutlinedTextField(value = uiState.confirmPassword, onValueChange = registerViewModel::onConfirmPasswordChange, label = { Text("Confirmar Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth()) }
         item { OutlinedTextField(value = uiState.phone, onValueChange = registerViewModel::onPhoneChange, label = { Text("Teléfono (opcional)") }, modifier = Modifier.fillMaxWidth()) }
 
-        item { Text("Mascotas", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp)) }
-        items(uiState.pets) { pet ->
-            var isDropdownExpanded by remember { mutableStateOf(false) }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = pet.name,
-                    onValueChange = { registerViewModel.onPetNameChange(pet.id, it) },
-                    label = { Text("Nombre Mascota", maxLines = 1) },
-                    modifier = Modifier.weight(1f)
-                )
-                ExposedDropdownMenuBox(
-                    expanded = isDropdownExpanded,
-                    onExpandedChange = { isDropdownExpanded = it },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    OutlinedTextField(
-                        value = pet.type,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Tipo") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = isDropdownExpanded,
-                        onDismissRequest = { isDropdownExpanded = false }
-                    ) {
-                        petTypes.forEach { type ->
-                            DropdownMenuItem(
-                                text = { Text(type) },
-                                onClick = {
-                                    registerViewModel.onPetTypeChange(pet.id, type)
-                                    isDropdownExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-                IconButton(onClick = { registerViewModel.removePet(pet.id) }) {
-                    Icon(Icons.Default.Delete, contentDescription = "Eliminar")
-                }
-            }
-        }
-
-        item { Button(onClick = { registerViewModel.addPet() }) { Text("Añadir Mascota") } }
 
         item { Spacer(modifier = Modifier.height(16.dp)) }
         item { Button(onClick = { registerViewModel.register() }, modifier = Modifier.fillMaxWidth()) { Text("Registrarse") } }

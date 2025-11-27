@@ -114,20 +114,6 @@ fun ProfileView(navController: NavController, viewModel: ProfileViewModel = view
                         }
                     }
 
-                    item {
-                        Text("Mis Mascotas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 16.dp))
-                    }
-
-                    items(profile.pets) { pet ->
-                        PetInfoRow(
-                            pet = pet,
-                            isEditing = uiState.isEditing,
-                            onNameChange = { newName -> viewModel.onPetNameChange(pet.id, newName) },
-                            onPhotoClick = { viewModel.setPhotoTarget(petPhotoTarget(pet.id)) }
-                        )
-                        Spacer(Modifier.height(8.dp))
-                    }
-                     item { Spacer(Modifier.height(64.dp)) }
                 }
             }
         }
@@ -155,43 +141,6 @@ private fun ProfileInfoRow(icon: ImageVector, label: String, value: String) {
         Column {
             Text(text = label.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PetInfoRow(
-    pet: Pet,
-    isEditing: Boolean,
-    onNameChange: (String) -> Unit,
-    onPhotoClick: () -> Unit
-) {
-    val painter = rememberAsyncImagePainter(model = pet.photoUri)
-    if (isEditing) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Image(
-                painter = painter,
-                contentDescription = "Foto de ${pet.name}",
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clickable(onClick = onPhotoClick),
-                contentScale = ContentScale.Crop
-            )
-            OutlinedTextField(value = pet.name, onValueChange = onNameChange, label = { Text("Nombre Mascota") }, modifier = Modifier.weight(1f))
-        }
-    } else {
-        Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(4.dp)) {
-            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Image(painter = painter, contentDescription = "Foto de ${pet.name}", modifier = Modifier.size(60.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer), contentScale = ContentScale.Crop)
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Text(text = pet.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(text = pet.type, style = MaterialTheme.typography.bodyMedium)
-                }
-            }
         }
     }
 }
