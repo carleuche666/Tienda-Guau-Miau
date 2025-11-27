@@ -1,5 +1,9 @@
 package com.vivitasol.tiendaguaumiau.views
 
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.VibratorManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -35,6 +39,21 @@ fun LoginView(
     loginViewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory(LocalContext.current))
 ) {
     val uiState by loginViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // Efecto para la vibración cuando hay un error
+    LaunchedEffect(uiState.errorMessage) {
+        if (uiState.errorMessage != null) {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                vibratorManager.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                context.getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
+            }
+            vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
+        }
+    }
 
     if (uiState.loginSuccess) {
         LaunchedEffect(Unit) { onLoginSuccess() }
